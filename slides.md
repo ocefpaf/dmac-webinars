@@ -33,7 +33,7 @@ history: true
 - Awkward ways to handle secrets.
 
 
->- GHA changes that by making it asier to pass secrets and integrating with GH own services.
+>- GHA changes that by making it easier to pass secrets and integrating with GH own services.
 
 . . .
 
@@ -43,7 +43,7 @@ PS: the idea is not new. Gitlab CI already implemented most of this.
 
 - **Travis-CI**: for testing and building sites;
 - **AppVeyor**: for Windows testing only;
-- **AzurePipelines**: fast but not wasy to integrate with GH and required a huge amount of re-writing to make old tests work.
+- **AzurePipelines**: fast but not easy to integrate with GH and required a huge amount of re-writing to make old tests work.
 
 
 # Enter GHA
@@ -348,6 +348,7 @@ For more info check the [GHA documentation](https://docs.github.com/en/actions/r
 2. [Build and publish documentation to gh-pages](https://github.com/ioos/ioos_code_lab/blob/master/.github/workflows/deploy-docs.yml).
 4. [Build, test, and publish source distribution and binary artifacts to PyPI](https://github.com/pyoceans/python-oceans/blob/master/.github/workflows/pip-tests.yml).
 5. [Build, test, cache, and publish a docker image](https://github.com/oceanhackweek/jupyter-image/blob/master/.github/workflows](https://github.com/oceanhackweek/jupyter-image/blob/master/.github/workflows)).
+6. [The marketplace](https://github.com/marketplace?type=actions) for GHA.
 
 # Questions?
 
