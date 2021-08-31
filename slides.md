@@ -343,7 +343,7 @@ For more info check the [GHA documentation](https://docs.github.com/en/actions/r
 
 # Summary/links
 
-1. [Setup a conda environment for Python testing](https://github.com/ioos/compliance-checker/blob/master/..github/workflows/default-tests.yml).
+1. [Setup a conda environment for Python testing](https://github.com/ioos/compliance-checker/blob/master/.github/workflows/default-tests.yml).
 3. [Setup a Python/pip environment for test](https://github.com/SciTools/cf-units/tree/main/.github/workflows).
 2. [Build and publish documentation to gh-pages](https://github.com/ioos/ioos_code_lab/blob/master/.github/workflows/deploy-docs.yml).
 4. [Build, test, and publish source distribution and binary artifacts to PyPI](https://github.com/pyoceans/python-oceans/blob/master/.github/workflows/pip-tests.yml).
