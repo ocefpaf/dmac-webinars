@@ -1,0 +1,150 @@
+<html>
+
+<head>
+
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+
+    <py-config>
+        packages = ["./static/wheels/ioos_qc-2.0.2-py3-none-any.whl"]
+        paths = ["./qc.py"]
+  
+        autoclose_loader = true
+        
+        [[runtimes]]
+        src = "https://cdn.jsdelivr.net/pyodide/v0.22.0a1/full/pyodide.js"
+        name = "pyodide-0.22.0a1"
+        lang = "python"
+    </py-config>
+
+    <py-env>
+        - matplotlib
+        - plotly
+        - ruamel-yaml==0.16.13
+        - pandas
+    </py-env>
+</head>
+
+<body>
+    <div class="jumbotron">
+        <h1>IOOS QC Web App</h1>
+        <p class="lead">
+            How to use pyscript to run ioos_qc on the browser.
+        </p>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-2 p-2 ml-4 mb-1">
+            <button type="button" class="btn btn-secondary">Select chart from list:</button>
+        </div>
+        <div class="col-sm-4 p-2 mr-4 mb-1">
+            <select class="form-control" id="select">
+                <option value="gross_range_test">Gross Range Test</option>
+                <option value="flat_line_test">Flat Line Test</option>
+                <option value="rate_of_change_test">Rate of Change Test</option>
+                <option value="spike_test">Spike Test</option>    
+            
+            </select>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-sm-6 p-2 shadow ml-4 mr-4 mb-4 bg-white rounded">
+            <div id="qc_test"></div>
+        </div>
+    </div>
+
+
+    <script type='text/javascript'>
+        function plot(graph, chart) {
+            var figure = JSON.parse(graph)
+            Plotly.newPlot(chart, figure, {});
+        }
+    </script>
+
+    <py-script>
+        # Import libraries
+        import pandas as pd
+        import matplotlib.pyplot as plt
+        import js
+        import json
+        import plotly
+        import plotly.express as px
+
+        from pyodide.http import open_url
+
+        # Get the data        
+        uploaded_file = "./water_level_example_test.csv"
+        df = pd.read_csv(open_url(uploaded_file))
+
+        # Run QA/QC
+        from qc import run_tests, make_mask
+        variable = "sea_surface_height_above_sea_level"
+        result = run_tests(df, variable)
+
+        def plot(qc_test):
+            mask = make_mask(df, result, variable, qc_test)
+            fig = px.line(df,
+            x="time", y=variable,
+            width=800, height=400)
+
+            fig.add_trace(
+                px.scatter(
+                    x=df["time"],
+                    y=mask["qc_fail"],
+                    color_discrete_sequence=["red"],
+                    ).data[0],
+                )
+            fig.add_trace(
+                px.scatter(
+                    x=df["time"],
+                    y=mask["qc_notrun"],
+                    color_discrete_sequence=["gray"],
+                    ).data[0],
+                )
+            fig.add_trace(
+                px.scatter(
+                    x=df["time"],
+                    y=mask["qc_suspect"],
+                    color_discrete_sequence=["orange"],
+                    ).data[0],
+                )
+            fig.add_trace(
+                px.scatter(
+                    x=df["time"],
+                    y=mask["qc_pass"],
+                    color_discrete_sequence=["green"],
+                    ).data[0],
+                )
+
+            graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+            js.plot(graphJSON, "qc_test")
+           
+            
+        from js import document
+        from pyodide.ffi import create_proxy
+
+        def selectChange(event):
+            choice = document.getElementById("select").value
+            plot(choice)
+
+        def setup():
+            # Create a JsProxy for the callback function
+            change_proxy = create_proxy(selectChange)
+
+            e = document.getElementById("select")
+            e.addEventListener("change", change_proxy)
+
+        setup()
+
+        plot(qc_test="gross_range_test")
+
+        result.to_html()
+    </py-script>
+</body>
+
+</html>

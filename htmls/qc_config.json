@@ -1,0 +1,26 @@
+{
+    "qartod": {
+        "gross_range_test": {
+            "fail_span": [
+                -10,
+                10
+            ],
+            "suspect_span": [
+                -2,
+                3
+            ]
+        },
+        "flat_line_test": {
+            "tolerance": 0.001,
+            "suspect_threshold": 10800,
+            "fail_threshold": 21600
+        },
+        "rate_of_change_test": {
+            "threshold": 0.001
+        },
+        "spike_test": {
+            "suspect_threshold": 0.8,
+            "fail_threshold": 3
+        }
+    }
+}

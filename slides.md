@@ -1,355 +1,279 @@
 ---
 author: Filipe Fernandes
-title: GitHub Actions
-date: Aug 26, 2021
+title: To the ~~moon~~ and back
+subtitle: Python on the web
+date: Dec 08, 2022
 history: true
 ---
 
-# Using GHA to:
 
->1. Setup a conda environment for Python testing.
->2. Setup a Python/pip environment for test.
->3. Build and publish documentation to gh-pages.
->4. Build, test, and publish source distribution and binary artifacts to PyPI.
->5. Build, test, cache, and publish a docker image.
+# Before we start
 
+What are our needs?
 
-# Quick review: CI-CD 1/3
-
-- Continuous Integration (CI)
-  - run tests at every code change.
-  - perform schedule tests for downstream dependencies.
-
-# Quick review: CI-CD 2/3
-
-- Continuous Deployment (CD)
-  - Publish documentation.
-  - Test, and Publish tagged source distributions.
-  - Build, test, and publish binary distributions.
-
-# Quick review: CI-CD 3/3
-
-- Most services did not integrated back with the code hosting platform.
-- Awkward ways to handle secrets.
-
-
->- GHA changes that by making it easier to pass secrets and integrating with GH own services.
-
-. . .
-
-PS: the idea is not new. Gitlab CI already implemented most of this.
-
-# Services are we using in the IOOS org?
-
-- **Travis-CI**: for testing and building sites;
-- **AppVeyor**: for Windows testing only;
-- **AzurePipelines**: fast but not easy to integrate with GH and required a huge amount of re-writing to make old tests work.
-
-
-# Enter GHA
-
-![](images/GHA.png)
-
-# Building workflows
-
-- Create a `.github/workflows` directory in your repository on GitHub;
-- Create an YAML file with the instructions for your workflow
-- Add Actions from the [marketplace](https://github.com/marketplace?type=actions) or build your own.
-
-# Warning
-
-<section data-background-color="red">
-
-The next slides will be terribly boring!
-Even more so than the slides you've seen so far.
-Viewer discretion is advised!!
-
-I promise a cute image at the end.
-
-</section>
-
-
-# YAML all the way down
-
-![](images/yaml.jpg)
-
-
-# Setup a conda environment
-
-<section>
-
-
-```yaml
-name: Default Tests
-
-on:
-  pull_request:
-  push:
-    branches: [master]
-```
-
-#
-
-```yaml
-jobs:
-  run:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9"]
-        os: [windows-latest, ubuntu-latest, macos-latest]
-      fail-fast: false
-```
-
-#
-
-```yaml
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Setup Conda
-      uses: s-weigand/setup-conda@v1
-      with:
-        activate-conda: false
-        conda-channels: conda-forge
-```
-
-#
-
-```yaml
-    - name: Python ${{ matrix.python-version }}
-      shell: bash -l {0}
-      run: |
-        conda create --name TEST python=${{ matrix.python-version }} pip "libnetcdf<4.8.0" --file requirements.txt --file test_requirements.txt --strict-channel-priority
-        source activate TEST
-        pip install -e . --no-deps --force-reinstall
-
-    - name: Conda Info
-      shell: bash -l {0}
-      run: |
-        source activate TEST
-        conda info --all
-        conda list
-```
-
-#
-
-```yaml
-    - name: Default Tests
-      shell: bash -l {0}
-      run: |
-        source activate TEST
-        pytest -s -rxs -v -k "not integration" compliance_checker
-```
-
-</section>
-
-# Setup a pip environment
-
-```yaml
-    - name: Setup python
-      uses: actions/setup-python@v2
-
-    - name: Install proj
-      run: sudo apt-get install libgeos-dev libproj-dev
-
-    - name: pip-tests
-      run: |
-        pytest -rxs tests
-```
-
-# Build and publish docs
-
-<section>
-
-```yaml
-name: Build and Deploy docs
-on:
-  push:
-    branches: [master]
-
-    - name: Build environment
-      shell: bash -l {0}
-      run: |
-         conda create --name IOOS --file .binder/conda-linux-64.lock
-         source activate IOOS
-```
-
-#
-
-```yaml
-    - name: Build documentation
-      shell: bash -l {0}
-      run: |
-        set -e
-        source activate IOOS
-        jupyter-book build jupyterbook
-
-    - name: GitHub Pages action
-      uses: peaceiris/actions-gh-pages@v3.6.1
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: jupyterbook/_build/html
-```
-
-</section>
-
-
-# Build, test, and publish artifacts
-
-<section>
-
-```yaml
-on:
-  release:
-    types:
-      - published
-
-    - name: Get tags
-      shell: bash
-      run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-```
-
-#
-
-```yaml
-    - name: Build linux wheels
-      uses: ./.github/workflows/actions/manylinux2014_x86_64
-
-    - name: Check built artifacts
-      working-directory: dist
-      run: |
-        python -m pip install wheel twine
-        python -m twine check *
-
-    - name: Upload built artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: pypi-artifacts
-        path: dist
-```
-
-#
-
-```yaml
-  test-artifacts:
-    needs: build-artifacts
-    name: Test ${{ matrix.tag }} for Python ${{ matrix.python }}
-```
-
-#
-
-```yaml
-  publish-artifacts:
-    needs: [build-artifacts, test-artifacts]
-    name: Publish built artifacts to PyPI
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download built artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: pypi-artifacts
-          path: dist
-```
-
-#
-
-```yaml
-      - name: Publish artifacts
-        uses: pypa/gh-action-pypi-publish@v1.4.2
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_PASSWORD }}
-```
-
-# 
-
-</section>
-
-# Build, test, cache, and publish docker image
-
-<section>
-
-```yaml
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1.5.1
-```
-
-#
-```yaml
-    - name: Cache Docker layers
-      uses: actions/cache@v2.1.6
-      with:
-        path: /tmp/.buildx-cache
-        key: ohw-docker-buildx-${{ github.sha }}
-        restore-keys: |
-          ohw-docker-buildx-
-```
-
-#
-```yaml
-    - name: Build Docker Image
-      uses: docker/build-push-action@v2.6.1
-      with:
-        push: false
-        tags: ${{ env.CONTAINER_NAME }}:PR
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache-new
-        load: true
-```
-
-</section>
-
-# CAVEATS
-
->- GHA does not run when you add the first workflow file via a PR.
->- Secrets are not accessible in PRs, for safety reasons, and that can make it hard to debug some workflow.
->- People outside the org team will require someone from the team to "Approve and run" the workflow. Thanks bitcoin miners!
->- The [marketplace](https://github.com/marketplace?type=actions) is awesome but the curation rules are not clear yet, there may be malicious Actions! Try to get the ones with most numbers of users and/or "Veryfied" by GitHub.
-
-# Extras
-
-Events that trigger workflows:
-
-```yaml
-on: [push, pull_request]
-```
-. . .
-
-```yaml
-on:
-  schedule:
-    - cron:  '30 5,17 * * *'
-```
-
-. . .
-
-```yaml
-on:
-  repository_dispatch:
-    types: [condalock-command]
-```
-
-# conda-lock
-
-![](images/conda-lock.png)
-
-[Image from PR 235](https://github.com/pangeo-data/pangeo-docker-images/pull/235).
+>- We need at fast serveless solution.
+>- With the basic scientific packages (numpy, scipy, pandas, matplotlib),
+>- and at least some met/ocean specific packages like:
+netCDF4 (**netcdf-c**, **hdf5**), geopandas (**geos**), cartopy (**proj**), cftime (**cyhton extension**), cf_units (**udunits2**), etc.
 
 . . . 
 
-For more info check the [GHA documentation](https://docs.github.com/en/actions/reference/events-that-trigger-workflows).
+Please keep this in mind as we navigate this presentation.
 
 
-# Summary/links
+# Bit of history
 
-1. [Setup a conda environment for Python testing](https://github.com/ioos/compliance-checker/blob/master/.github/workflows/default-tests.yml).
-3. [Setup a Python/pip environment for test](https://github.com/SciTools/cf-units/tree/main/.github/workflows).
-2. [Build and publish documentation to gh-pages](https://github.com/ioos/ioos_code_lab/blob/master/.github/workflows/deploy-docs.yml).
-4. [Build, test, and publish source distribution and binary artifacts to PyPI](https://github.com/pyoceans/python-oceans/blob/master/.github/workflows/pip-tests.yml).
-5. [Build, test, cache, and publish a docker image](https://github.com/oceanhackweek/jupyter-image/blob/master/.github/workflows](https://github.com/oceanhackweek/jupyter-image/blob/master/.github/workflows)).
-6. [The marketplace](https://github.com/marketplace?type=actions) for GHA.
+Python on the web is not a new idea.
+There were many, attempts with different degrees of success, in the past years.
+
+# Running on a server
+
+[https://www.pythonanywhere.com/](https://www.pythonanywhere.com/)
+
+![](images/python_anywhere.png)
+
+# Running on a server
+
+[https://streamlit.io](https://streamlit.io)
+![](images/streamlit.png)
+
+## Cloud plans
+
+[https://discuss.streamlit.io/t/what-happened-to-streamlit-cloud-plans/24894](https://discuss.streamlit.io/t/what-happened-to-streamlit-cloud-plans/24894)
+
+# Running on a server
+
+[https://htmx.org](https://htmx.org/examples)
+
+![](images/htmx.png)
+
+## HTMX Project
+
+[https://github.com/renceInbox/fastapi-todo](https://github.com/renceInbox/fastapi-todo)
+
+# Transpilation
+
+[https://www.transcrypt.org](https://www.transcrypt.org)
+
+## Transcrypt {data-background-iframe="https://www.transcrypt.org"}
+
+# In-browser re-implementation (failed live demos)
+
+- [https://brython.info](https://brython.info/static_doc/en/interpreter.html)
+- [https://skulpt.org](https://skulpt.org)
+
+## Brython {data-background-iframe="https://brython.info/static_doc/en/interpreter.html"}
+## Skulpt {data-background-iframe="https://skulpt.org"}
+
+# Can we do better than transpiling to/or reimplementing in JS?
+
+>- [Webassembly (Wasm)](https://webassembly.org/) is a binary instruction format for a stack-based virtual machine.
+>- [Emscripten](https://emscripten.org/) is a compiler toolchain to WebAssembly.
+
+. . . 
+
+Wasm is the closest we ever got to a universal binary.
+
+# (Maybe) some successful live demos
+
+- [https://pypyjs.org](https://pypyjs.org)
+- [https://pyodide.org](https://pyodide.org/en/stable/console.html)
+
+## pypjs {data-background-iframe="https://pypyjs.org"}
+## Pyodide {data-background-iframe="https://pyodide.org/en/stable/console.html"}
+
+# Why is Pyodide a good option?
+
+>- Based on Emscripten
+>- Heavy download but fast execution
+>- Full CPython + scientific distribution
+>- Pure Python packages are installable
+>- [Compiled packages can be added](https://github.com/pyodide/pyodide/pulls?q=is%3Apr+author%3Aocefpaf+is%3Aclosed)
+
+
+# What else is missing?
+
+We need to be able to:
+
+>- Easily deploy Apps as HTML without compiling or downloading you own Pyodide
+>- Control the installed packages
+>- Choose the pyodide version
+>- Access to the DOM and some JS &#8596; Python exchange
+>- Some pre-built "web comfort" functions
+
+# Enter PyScript
+
+[https://pyscript.net](https://pyscript.net)
+
+
+>- Builds on top of and manages pyodide
+>- No installation required
+>- Environment management
+
+## pyscript {data-background-iframe="https://pyscript.net"}
+
+# How to use it?
+
+
+```html
+<link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+<script defer src="https://pyscript.net/latest/pyscript.js"></script>
+```
+
+. . .
+
+and a pyscript tag,
+
+. . .
+
+```html
+<py-script> print('Hello, World!') </py-script>
+```
+
+# What is the difference between PyScript and Pyodide?
+
+![](images/pyodide-pyscript.png)
+
+
+# Flexible config: control pyodide version
+
+```html
+<py-config>
+  [[runtimes]]
+  src = "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"
+  name = "pyodide-0.21.3"
+  lang = "python"
+</py-config>
+```
+
+# Flexible config: modules and even local wheels
+
+```html
+<py-config src="./custom.toml">
+  [[fetch]]
+  files = ["./utils.py"]
+  packages = [
+      "numpy",
+      "matplotlib",
+      "./static/wheels/mypackage-0.1.3-py3-none-any.whl"
+    ]
+</py-config>
+```
+
+
+# PyScript: Labeled elements
+
+```html
+    <b><p>Today is <u><label id='today'></label></u></p></b>
+    <br>
+    <div id="pi" class="alert alert-primary"></div>
+    <py-script>
+      import datetime as dt
+      pyscript.write('today', dt.date.today().strftime('%A %B %d, %Y'))
+
+      def compute_pi(n):
+          pi = 2
+          for i in range(1,n):
+              pi *= 4 * i ** 2 / (4 * i ** 2 - 1)
+          return pi
+
+      pi = compute_pi(100000)
+      pyscript.write('pi', f'pi is approximately {pi:.3f}')
+    </py-script>
+```
+
+## pi {data-background-iframe="htmls/pi.html"}
+
+# Many built-in functionalities
+
+But... Before we dive into that...
+
+
+# Still under heavy-development
+
+![](images/deprecated.png)
+
+
+# Some of the built-in functionalities
+
+```html
+<div id="manual-write"></div>
+<button py-click="write_to_page()" id="manual">Say Hello</button>
+<div id="display-write"></div>
+<button py-click="display_to_div()" id="display">Say Things!</button>
+<button py-click="print_to_page()" id="print">Print Things!</button>
+```
+
+## click {data-background-iframe="htmls/button.html"}
+
+# JavaScript to PyScript
+
+```html
+<script>
+    name = "Guido" //A JS variable
+
+    // Define a JS Function
+    function addTwoNumbers(x, y){
+        return x + y;
+    }
+</script>
+```
+
+. . . 
+
+```html
+<py-script>
+    # Import and use JS function and variable into Python
+    from js import name, addTwoNumbers
+
+    print(f"Hello {name}")
+    print("Adding 1 and 2 in Javascript: " + str(addTwoNumbers(1, 2)))
+</py-script>
+```
+
+# PyScript to JavaScript
+
+```html
+<body>
+    <py-script>x = 42</py-script>
+
+    <button onclick="showX()">Click Me to Get 'x' from Python</button>
+    <script>
+        function showX(){
+            console.log(`In Python right now, x = ${PyScript.globals.get('x')}`)
+        }
+    </script>
+</body>
+```
+
+# display
+
+![](images/display.png)
+
+
+# What can our community do with this?
+
+## glider of the day {data-background-iframe="htmls/glider.html"}
+## ioos_qc explorer {data-background-iframe="htmls/ioos_qc_browser.html"}
+## ioos_qc csv uploader {data-background-iframe="htmls/ioos_qc_csv.html"}
+
+# What if we cannot access the web?
+
+[https://github.com/ocean-data-qc/ocean-data-qc](https://github.com/ocean-data-qc/ocean-data-qc)
+
+# Summary
+
+>- **Python in the browser**: Enable drop-in content, external file hosting, and application hosting without the reliance on server-side configuration (no subscriptions, no remote downtime, no data is exchanged)
+>- **Python ecosystem**: Run many popular packages of Python and the scientific stack (such as numpy, pandas, scikit-learn, and more)
+
+# Summary
+
+- **Python with JavaScript**: Bi-directional communication between Python and Javascript objects and namespaces
+
+>- **Environment management**: Allow users to define what packages and files to include for the page code to run
+>- **Ship your app zero dependencies**
+>- **Visual application development**: Use readily available curated UI components, such as buttons, containers, text boxes, and more
 
 # Questions?
 
-![](images/limes.jpg)
+## {data-background-iframe="htmls/mario/play_mario.html"}

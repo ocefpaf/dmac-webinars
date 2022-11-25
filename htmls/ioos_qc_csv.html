@@ -1,0 +1,108 @@
+<html>
+
+<head>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.9.3/dist/js/tabulator.js"></script>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.js"></script>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.2.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/@holoviz/panel@0.13.0/dist/panel.min.js"></script>
+    <script type="text/javascript">
+      Bokeh.set_log_level("info");
+    </script>
+
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <script type="text/javascript">
+        function plot(graph, chart) {
+            var figure = JSON.parse(graph)
+            Plotly.newPlot(chart, figure, {});
+        }
+    </script>
+
+    <py-config type="toml">
+        autoclose_loader = true
+
+        packages = [
+          "numpy",
+          "pandas",
+          "panel",
+          "plotly",
+          "ruamel-yaml==0.16.13",
+          "pandas",
+          "./static/wheels/ioos_qc-2.0.2-py3-none-any.whl",
+        ]
+        paths = ["./qc.py"]
+          
+        [[runtimes]]
+        src = "https://cdn.jsdelivr.net/pyodide/v0.22.0a1/full/pyodide.js"
+        name = "pyodide-0.22.0a1"
+        lang = "python"
+    </py-config>
+</head>
+
+<body>
+    <div class="jumbotron">
+        <h1>IOOS QC Web App</h1>
+        <p class="lead">
+            Run ioos_qc on the browser!
+        </p>
+    </div>
+    <h2>Choose a CSV file</h2>
+      <div id="fileinput"></div>
+      <div id="upload"></div>
+      <div id="table"></div>
+      <div id="download"></div> 
+    <py-script>
+
+import asyncio
+import panel as pn
+import pandas as pd
+from panel.io.pyodide import show
+from io import StringIO
+
+fileInput = pn.widgets.FileInput(accept=".csv")
+uploadButton = pn.widgets.Button(name="Upload", button_type="primary")
+
+df = pd.DataFrame()
+
+table = pn.widgets.Tabulator(pagination="remote", page_size=10)
+
+
+def process_file(event):
+    if fileInput.value is not None:
+        df = pd.read_csv(io.BytesIO(fileInput.value))
+
+        from qc import run_tests, make_mask
+        variable = "sea_surface_height_above_sea_level"
+        df = run_tests(df, variable)
+
+        table.value = df
+        document.getElementById("table").style.display = "block"
+
+
+uploadButton.on_click(process_file)
+
+
+def get_csv():
+    return io.BytesIO(table.value.to_csv().encode())
+
+
+file_download_csv = pn.widgets.FileDownload(filename="data.csv", callback=get_csv, button_type="primary")
+    
+
+await show(fileInput, "fileinput")
+await show(uploadButton, "upload")
+await show(table, "table")
+await show(file_download_csv, "download")
+    </py-script>
+</body>
+
+</html>

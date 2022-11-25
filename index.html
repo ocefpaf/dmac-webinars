@@ -4,19 +4,27 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="author" content="Filipe Fernandes">
-  <title>GitHub Actions</title>
+  <title>To the moon and back</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
   <link rel="stylesheet" href="https://unpkg.com/reveal.js@^4//dist/reset.css">
   <link rel="stylesheet" href="https://unpkg.com/reveal.js@^4//dist/reveal.css">
   <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -88,320 +96,381 @@
     <div class="slides">
 
 <section id="title-slide">
-  <h1 class="title">GitHub Actions</h1>
+  <h1 class="title">To the <del>moon</del> and back</h1>
+  <p class="subtitle">Python on the web</p>
   <p class="author">Filipe Fernandes</p>
-  <p class="date">Aug 26, 2021</p>
+  <p class="date">Dec 08, 2022</p>
 </section>
 
-<section id="using-gha-to" class="slide level1">
-<h1>Using GHA to:</h1>
-<ol type="1">
-<li class="fragment">Setup a conda environment for Python testing.</li>
-<li class="fragment">Setup a Python/pip environment for test.</li>
-<li class="fragment">Build and publish documentation to gh-pages.</li>
-<li class="fragment">Build, test, and publish source distribution and binary artifacts to PyPI.</li>
-<li class="fragment">Build, test, cache, and publish a docker image.</li>
-</ol>
-</section>
-<section id="quick-review-ci-cd-13" class="slide level1">
-<h1>Quick review: CI-CD 1/3</h1>
+<section id="before-we-start" class="title-slide slide level1">
+<h1>Before we start</h1>
+<p>What are our needs?</p>
 <ul>
-<li>Continuous Integration (CI)
-<ul>
-<li>run tests at every code change.</li>
-<li>perform schedule tests for downstream dependencies.</li>
-</ul></li>
-</ul>
-</section>
-<section id="quick-review-ci-cd-23" class="slide level1">
-<h1>Quick review: CI-CD 2/3</h1>
-<ul>
-<li>Continuous Deployment (CD)
-<ul>
-<li>Publish documentation.</li>
-<li>Test, and Publish tagged source distributions.</li>
-<li>Build, test, and publish binary distributions.</li>
-</ul></li>
-</ul>
-</section>
-<section id="quick-review-ci-cd-33" class="slide level1">
-<h1>Quick review: CI-CD 3/3</h1>
-<ul>
-<li>Most services did not integrated back with the code hosting platform.</li>
-<li>Awkward ways to handle secrets.</li>
-</ul>
-<ul>
-<li class="fragment">GHA changes that by making it easier to pass secrets and integrating with GH own services.</li>
+<li class="fragment">We need at fast serveless solution.</li>
+<li class="fragment">With the basic scientific packages (numpy, scipy,
+pandas, matplotlib),</li>
+<li class="fragment">and at least some met/ocean specific packages like:
+netCDF4 (<strong>netcdf-c</strong>, <strong>hdf5</strong>), geopandas
+(<strong>geos</strong>), cartopy (<strong>proj</strong>), cftime
+(<strong>cyhton extension</strong>), cf_units
+(<strong>udunits2</strong>), etc.</li>
 </ul>
 <div class="fragment">
-<p>PS: the idea is not new. Gitlab CI already implemented most of this.</p>
+<p>Please keep this in mind as we navigate this presentation.</p>
 </div>
 </section>
-<section id="services-are-we-using-in-the-ioos-org" class="slide level1">
-<h1>Services are we using in the IOOS org?</h1>
+
+<section id="bit-of-history" class="title-slide slide level1">
+<h1>Bit of history</h1>
+<p>Python on the web is not a new idea. There were many, attempts with
+different degrees of success, in the past years.</p>
+</section>
+
+<section id="running-on-a-server" class="title-slide slide level1">
+<h1>Running on a server</h1>
+<p><a
+href="https://www.pythonanywhere.com/">https://www.pythonanywhere.com/</a></p>
+<p><img data-src="images/python_anywhere.png" /></p>
+</section>
+
+<section>
+<section id="running-on-a-server-1" class="title-slide slide level1">
+<h1>Running on a server</h1>
+<p><a href="https://streamlit.io">https://streamlit.io</a> <img
+data-src="images/streamlit.png" /></p>
+</section>
+<section id="cloud-plans" class="slide level2">
+<h2>Cloud plans</h2>
+<p><a
+href="https://discuss.streamlit.io/t/what-happened-to-streamlit-cloud-plans/24894">https://discuss.streamlit.io/t/what-happened-to-streamlit-cloud-plans/24894</a></p>
+</section></section>
+<section>
+<section id="running-on-a-server-2" class="title-slide slide level1">
+<h1>Running on a server</h1>
+<p><a href="https://htmx.org/examples">https://htmx.org</a></p>
+<p><img data-src="images/htmx.png" /></p>
+</section>
+<section id="htmx-project" class="slide level2">
+<h2>HTMX Project</h2>
+<p><a
+href="https://github.com/renceInbox/fastapi-todo">https://github.com/renceInbox/fastapi-todo</a></p>
+</section></section>
+<section>
+<section id="transpilation" class="title-slide slide level1">
+<h1>Transpilation</h1>
+<p><a
+href="https://www.transcrypt.org">https://www.transcrypt.org</a></p>
+</section>
+<section id="transcrypt" class="slide level2"
+data-background-iframe="https://www.transcrypt.org">
+<h2 data-background-iframe="https://www.transcrypt.org">Transcrypt</h2>
+</section></section>
+<section>
+<section id="in-browser-re-implementation-failed-live-demos"
+class="title-slide slide level1">
+<h1>In-browser re-implementation (failed live demos)</h1>
 <ul>
-<li><strong>Travis-CI</strong>: for testing and building sites;</li>
-<li><strong>AppVeyor</strong>: for Windows testing only;</li>
-<li><strong>AzurePipelines</strong>: fast but not easy to integrate with GH and required a huge amount of re-writing to make old tests work.</li>
+<li><a
+href="https://brython.info/static_doc/en/interpreter.html">https://brython.info</a></li>
+<li><a href="https://skulpt.org">https://skulpt.org</a></li>
 </ul>
 </section>
-<section id="enter-gha" class="slide level1">
-<h1>Enter GHA</h1>
-<p><img data-src="images/GHA.png" /></p>
+<section id="brython" class="slide level2"
+data-background-iframe="https://brython.info/static_doc/en/interpreter.html">
+<h2
+data-background-iframe="https://brython.info/static_doc/en/interpreter.html">Brython</h2>
 </section>
-<section id="building-workflows" class="slide level1">
-<h1>Building workflows</h1>
+<section id="skulpt" class="slide level2"
+data-background-iframe="https://skulpt.org">
+<h2 data-background-iframe="https://skulpt.org">Skulpt</h2>
+</section></section>
+<section
+id="can-we-do-better-than-transpiling-toor-reimplementing-in-js"
+class="title-slide slide level1">
+<h1>Can we do better than transpiling to/or reimplementing in JS?</h1>
 <ul>
-<li>Create a <code>.github/workflows</code> directory in your repository on GitHub;</li>
-<li>Create an YAML file with the instructions for your workflow</li>
-<li>Add Actions from the <a href="https://github.com/marketplace?type=actions">marketplace</a> or build your own.</li>
+<li class="fragment"><a href="https://webassembly.org/">Webassembly
+(Wasm)</a> is a binary instruction format for a stack-based virtual
+machine.</li>
+<li class="fragment"><a href="https://emscripten.org/">Emscripten</a> is
+a compiler toolchain to WebAssembly.</li>
+</ul>
+<div class="fragment">
+<p>Wasm is the closest we ever got to a universal binary.</p>
+</div>
+</section>
+
+<section>
+<section id="maybe-some-successful-live-demos"
+class="title-slide slide level1">
+<h1>(Maybe) some successful live demos</h1>
+<ul>
+<li><a href="https://pypyjs.org">https://pypyjs.org</a></li>
+<li><a
+href="https://pyodide.org/en/stable/console.html">https://pyodide.org</a></li>
 </ul>
 </section>
-<section id="warning" class="slide level1">
-<h1>Warning</h1>
-<section data-background-color="red">
-<p>The next slides will be terribly boring! Even more so than the slides you’ve seen so far. Viewer discretion is advised!!</p>
-<p>I promise a cute image at the end.</p>
+<section id="pypjs" class="slide level2"
+data-background-iframe="https://pypyjs.org">
+<h2 data-background-iframe="https://pypyjs.org">pypjs</h2>
 </section>
-</section>
-<section id="yaml-all-the-way-down" class="slide level1">
-<h1>YAML all the way down</h1>
-<p><img data-src="images/yaml.jpg" /></p>
-</section>
-<section id="setup-a-conda-environment" class="slide level1">
-<h1>Setup a conda environment</h1>
-<section>
-<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Default Tests</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">master</span><span class="kw">]</span></span></code></pre></div>
-</section>
-<section id="section" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">run</span><span class="kw">:</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ${{ matrix.os }}</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">strategy</span><span class="kw">:</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">matrix</span><span class="kw">:</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">python-version</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;3.6&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;3.7&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;3.8&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;3.9&quot;</span><span class="kw">]</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">os</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">windows-latest</span><span class="kw">,</span><span class="at"> ubuntu-latest</span><span class="kw">,</span><span class="at"> macos-latest</span><span class="kw">]</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">fail-fast</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span></code></pre></div>
-</section>
-<section id="section-1" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v2</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Setup Conda</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> s-weigand/setup-conda@v1</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">activate-conda</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">conda-channels</span><span class="kw">:</span><span class="at"> conda-forge</span></span></code></pre></div>
-</section>
-<section id="section-2" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Python ${{ matrix.python-version }}</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">shell</span><span class="kw">:</span><span class="at"> bash -l {0}</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">      run</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        conda create --name TEST python=${{ matrix.python-version }} pip &quot;libnetcdf&lt;4.8.0&quot; --file requirements.txt --file test_requirements.txt --strict-channel-priority</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        source activate TEST</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        pip install -e . --no-deps --force-reinstall</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Conda Info</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">shell</span><span class="kw">:</span><span class="at"> bash -l {0}</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">      run</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        source activate TEST</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        conda info --all</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        conda list</span></code></pre></div>
-</section>
-<section id="section-3" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Default Tests</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">shell</span><span class="kw">:</span><span class="at"> bash -l {0}</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">      run</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        source activate TEST</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        pytest -s -rxs -v -k &quot;not integration&quot; compliance_checker</span></code></pre></div>
-</section>
-</section>
-<section id="setup-a-pip-environment" class="slide level1">
-<h1>Setup a pip environment</h1>
-<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Setup python</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/setup-python@v2</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install proj</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">run</span><span class="kw">:</span><span class="at"> sudo apt-get install libgeos-dev libproj-dev</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> pip-tests</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">      run</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        pytest -rxs tests</span></code></pre></div>
-</section>
-<section id="build-and-publish-docs" class="slide level1">
-<h1>Build and publish docs</h1>
-<section>
-<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Build and Deploy docs</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">master</span><span class="kw">]</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Build environment</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">shell</span><span class="kw">:</span><span class="at"> bash -l {0}</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">      run</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>         conda create --name IOOS --file .binder/conda-linux-64.lock</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>         source activate IOOS</span></code></pre></div>
-</section>
-<section id="section-4" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Build documentation</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">shell</span><span class="kw">:</span><span class="at"> bash -l {0}</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">      run</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        set -e</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        source activate IOOS</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        jupyter-book build jupyterbook</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> GitHub Pages action</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> peaceiris/actions-gh-pages@v3.6.1</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">github_token</span><span class="kw">:</span><span class="at"> ${{ secrets.GITHUB_TOKEN }}</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">publish_dir</span><span class="kw">:</span><span class="at"> jupyterbook/_build/html</span></span></code></pre></div>
-</section>
-</section>
-<section id="build-test-and-publish-artifacts" class="slide level1">
-<h1>Build, test, and publish artifacts</h1>
-<section>
-<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">release</span><span class="kw">:</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> published</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Get tags</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">shell</span><span class="kw">:</span><span class="at"> bash</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">run</span><span class="kw">:</span><span class="at"> git fetch --depth=1 origin +refs/tags/*:refs/tags/*</span></span></code></pre></div>
-</section>
-<section id="section-5" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb10"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Build linux wheels</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> ./.github/workflows/actions/manylinux2014_x86_64</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Check built artifacts</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">working-directory</span><span class="kw">:</span><span class="at"> dist</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">      run</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>        python -m pip install wheel twine</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>        python -m twine check *</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Upload built artifacts</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/upload-artifact@v2</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> pypi-artifacts</span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">path</span><span class="kw">:</span><span class="at"> dist</span></span></code></pre></div>
-</section>
-<section id="section-6" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb11"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">test-artifacts</span><span class="kw">:</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> build-artifacts</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Test ${{ matrix.tag }} for Python ${{ matrix.python }}</span></span></code></pre></div>
-</section>
-<section id="section-7" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb12"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">publish-artifacts</span><span class="kw">:</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">build-artifacts</span><span class="kw">,</span><span class="at"> test-artifacts</span><span class="kw">]</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Publish built artifacts to PyPI</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Download built artifacts</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/download-artifact@v2</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> pypi-artifacts</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> dist</span></span></code></pre></div>
-</section>
-<section id="section-8" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb13"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Publish artifacts</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> pypa/gh-action-pypi-publish@v1.4.2</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">user</span><span class="kw">:</span><span class="at"> __token__</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">password</span><span class="kw">:</span><span class="at"> ${{ secrets.PYPI_PASSWORD }}</span></span></code></pre></div>
-</section>
-<section id="section-9" class="slide level1">
-<h1></h1>
-</section>
-</section>
-<section id="build-test-cache-and-publish-docker-image" class="slide level1">
-<h1>Build, test, cache, and publish docker image</h1>
-<section>
-<div class="sourceCode" id="cb14"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Set up Docker Buildx</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> docker/setup-buildx-action@v1.5.1</span></span></code></pre></div>
-</section>
-<section id="section-10" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb15"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Cache Docker layers</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/cache@v2.1.6</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /tmp/.buildx-cache</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">key</span><span class="kw">:</span><span class="at"> ohw-docker-buildx-${{ github.sha }}</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">        restore-keys</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>          ohw-docker-buildx-</span></code></pre></div>
-</section>
-<section id="section-11" class="slide level1">
-<h1></h1>
-<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Build Docker Image</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> docker/build-push-action@v2.6.1</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">push</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> ${{ env.CONTAINER_NAME }}:PR</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">cache-from</span><span class="kw">:</span><span class="at"> type=local,src=/tmp/.buildx-cache</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">cache-to</span><span class="kw">:</span><span class="at"> type=local,dest=/tmp/.buildx-cache-new</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">load</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
-</section>
-</section>
-<section id="caveats" class="slide level1">
-<h1>CAVEATS</h1>
+<section id="pyodide" class="slide level2"
+data-background-iframe="https://pyodide.org/en/stable/console.html">
+<h2
+data-background-iframe="https://pyodide.org/en/stable/console.html">Pyodide</h2>
+</section></section>
+<section id="why-is-pyodide-a-good-option"
+class="title-slide slide level1">
+<h1>Why is Pyodide a good option?</h1>
 <ul>
-<li class="fragment">GHA does not run when you add the first workflow file via a PR.</li>
-<li class="fragment">Secrets are not accessible in PRs, for safety reasons, and that can make it hard to debug some workflow.</li>
-<li class="fragment">People outside the org team will require someone from the team to “Approve and run” the workflow. Thanks bitcoin miners!</li>
-<li class="fragment">The <a href="https://github.com/marketplace?type=actions">marketplace</a> is awesome but the curation rules are not clear yet, there may be malicious Actions! Try to get the ones with most numbers of users and/or “Veryfied” by GitHub.</li>
+<li class="fragment">Based on Emscripten</li>
+<li class="fragment">Heavy download but fast execution</li>
+<li class="fragment">Full CPython + scientific distribution</li>
+<li class="fragment">Pure Python packages are installable</li>
+<li class="fragment"><a
+href="https://github.com/pyodide/pyodide/pulls?q=is%3Apr+author%3Aocefpaf+is%3Aclosed">Compiled
+packages can be added</a></li>
 </ul>
 </section>
-<section id="extras" class="slide level1">
-<h1>Extras</h1>
-<p>Events that trigger workflows:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">push</span><span class="kw">,</span><span class="at"> pull_request</span><span class="kw">]</span></span></code></pre></div>
+
+<section id="what-else-is-missing" class="title-slide slide level1">
+<h1>What else is missing?</h1>
+<p>We need to be able to:</p>
+<ul>
+<li class="fragment">Easily deploy Apps as HTML without compiling or
+downloading you own Pyodide</li>
+<li class="fragment">Control the installed packages</li>
+<li class="fragment">Choose the pyodide version</li>
+<li class="fragment">Access to the DOM and some JS ↔︎ Python
+exchange</li>
+<li class="fragment">Some pre-built “web comfort” functions</li>
+</ul>
+</section>
+
+<section>
+<section id="enter-pyscript" class="title-slide slide level1">
+<h1>Enter PyScript</h1>
+<p><a href="https://pyscript.net">https://pyscript.net</a></p>
+<ul>
+<li class="fragment">Builds on top of and manages pyodide</li>
+<li class="fragment">No installation required</li>
+<li class="fragment">Environment management</li>
+</ul>
+</section>
+<section id="pyscript" class="slide level2"
+data-background-iframe="https://pyscript.net">
+<h2 data-background-iframe="https://pyscript.net">pyscript</h2>
+</section></section>
+<section id="how-to-use-it" class="title-slide slide level1">
+<h1>How to use it?</h1>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;link</span> <span class="er">rel</span><span class="ot">=</span><span class="st">&quot;stylesheet&quot;</span> <span class="er">href</span><span class="ot">=</span><span class="st">&quot;https://pyscript.net/latest/pyscript.css&quot;</span> <span class="kw">/&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;script</span> <span class="er">defer</span> <span class="er">src</span><span class="ot">=</span><span class="st">&quot;https://pyscript.net/latest/pyscript.js&quot;</span><span class="kw">&gt;&lt;/script&gt;</span></span></code></pre></div>
 <div class="fragment">
-<div class="sourceCode" id="cb18"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">schedule</span><span class="kw">:</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">cron</span><span class="kw">:</span><span class="at">  </span><span class="st">&#39;30 5,17 * * *&#39;</span></span></code></pre></div>
+<p>and a pyscript tag,</p>
 </div>
 <div class="fragment">
-<div class="sourceCode" id="cb19"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">repository_dispatch</span><span class="kw">:</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">condalock-command</span><span class="kw">]</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;py-script&gt;</span> print(&#39;Hello, World!&#39;) <span class="kw">&lt;/py-script&gt;</span></span></code></pre></div>
 </div>
 </section>
-<section id="conda-lock" class="slide level1">
-<h1>conda-lock</h1>
-<p><img data-src="images/conda-lock.png" /></p>
-<p><a href="https://github.com/pangeo-data/pangeo-docker-images/pull/235">Image from PR 235</a>.</p>
+
+<section id="what-is-the-difference-between-pyscript-and-pyodide"
+class="title-slide slide level1">
+<h1>What is the difference between PyScript and Pyodide?</h1>
+<p><img data-src="images/pyodide-pyscript.png" /></p>
+</section>
+
+<section id="flexible-config-control-pyodide-version"
+class="title-slide slide level1">
+<h1>Flexible config: control pyodide version</h1>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;py-config&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  [[runtimes]]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  src = &quot;https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js&quot;</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  name = &quot;pyodide-0.21.3&quot;</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  lang = &quot;python&quot;</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/py-config&gt;</span></span></code></pre></div>
+</section>
+
+<section id="flexible-config-modules-and-even-local-wheels"
+class="title-slide slide level1">
+<h1>Flexible config: modules and even local wheels</h1>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;py-config</span> <span class="er">src</span><span class="ot">=</span><span class="st">&quot;./custom.toml&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  [[fetch]]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  files = [&quot;./utils.py&quot;]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  packages = [</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>      &quot;numpy&quot;,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      &quot;matplotlib&quot;,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>      &quot;./static/wheels/mypackage-0.1.3-py3-none-any.whl&quot;</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/py-config&gt;</span></span></code></pre></div>
+</section>
+
+<section>
+<section id="pyscript-labeled-elements"
+class="title-slide slide level1">
+<h1>PyScript: Labeled elements</h1>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;b&gt;&lt;p&gt;</span>Today is <span class="kw">&lt;u&gt;&lt;label</span> <span class="er">id</span><span class="ot">=</span><span class="st">&#39;today&#39;</span><span class="kw">&gt;&lt;/label&gt;&lt;/u&gt;&lt;/p&gt;&lt;/b&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;br&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;div</span> <span class="er">id</span><span class="ot">=</span><span class="st">&quot;pi&quot;</span> <span class="er">class</span><span class="ot">=</span><span class="st">&quot;alert alert-primary&quot;</span><span class="kw">&gt;&lt;/div&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;py-script&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      import datetime as dt</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      pyscript.write(&#39;today&#39;, dt.date.today().strftime(&#39;%A %B %d, %Y&#39;))</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      def compute_pi(n):</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>          pi = 2</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>          for i in range(1,n):</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>              pi *= 4 * i ** 2 / (4 * i ** 2 - 1)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>          return pi</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      pi = compute_pi(100000)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>      pyscript.write(&#39;pi&#39;, f&#39;pi is approximately {pi:.3f}&#39;)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/py-script&gt;</span></span></code></pre></div>
+</section>
+<section id="pi" class="slide level2"
+data-background-iframe="htmls/pi.html">
+<h2 data-background-iframe="htmls/pi.html">pi</h2>
+</section></section>
+<section id="many-built-in-functionalities"
+class="title-slide slide level1">
+<h1>Many built-in functionalities</h1>
+<p>But… Before we dive into that…</p>
+</section>
+
+<section id="still-under-heavy-development"
+class="title-slide slide level1">
+<h1>Still under heavy-development</h1>
+<p><img data-src="images/deprecated.png" /></p>
+</section>
+
+<section>
+<section id="some-of-the-built-in-functionalities"
+class="title-slide slide level1">
+<h1>Some of the built-in functionalities</h1>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;div</span> <span class="er">id</span><span class="ot">=</span><span class="st">&quot;manual-write&quot;</span><span class="kw">&gt;&lt;/div&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span> <span class="er">py-click</span><span class="ot">=</span><span class="st">&quot;write_to_page()&quot;</span> <span class="er">id</span><span class="ot">=</span><span class="st">&quot;manual&quot;</span><span class="kw">&gt;</span>Say Hello<span class="kw">&lt;/button&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;div</span> <span class="er">id</span><span class="ot">=</span><span class="st">&quot;display-write&quot;</span><span class="kw">&gt;&lt;/div&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span> <span class="er">py-click</span><span class="ot">=</span><span class="st">&quot;display_to_div()&quot;</span> <span class="er">id</span><span class="ot">=</span><span class="st">&quot;display&quot;</span><span class="kw">&gt;</span>Say Things!<span class="kw">&lt;/button&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span> <span class="er">py-click</span><span class="ot">=</span><span class="st">&quot;print_to_page()&quot;</span> <span class="er">id</span><span class="ot">=</span><span class="st">&quot;print&quot;</span><span class="kw">&gt;</span>Print Things!<span class="kw">&lt;/button&gt;</span></span></code></pre></div>
+</section>
+<section id="click" class="slide level2"
+data-background-iframe="htmls/button.html">
+<h2 data-background-iframe="htmls/button.html">click</h2>
+</section></section>
+<section id="javascript-to-pyscript" class="title-slide slide level1">
+<h1>JavaScript to PyScript</h1>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;script&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    name <span class="op">=</span> <span class="st">&quot;Guido&quot;</span> <span class="co">//A JS variable</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Define a JS Function</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">function</span> <span class="fu">addTwoNumbers</span>(x<span class="op">,</span> y){</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x <span class="op">+</span> y<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/script&gt;</span></span></code></pre></div>
 <div class="fragment">
-<p>For more info check the <a href="https://docs.github.com/en/actions/reference/events-that-trigger-workflows">GHA documentation</a>.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;py-script&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    # Import and use JS function and variable into Python</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    from js import name, addTwoNumbers</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    print(f&quot;Hello {name}&quot;)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    print(&quot;Adding 1 and 2 in Javascript: &quot; + str(addTwoNumbers(1, 2)))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/py-script&gt;</span></span></code></pre></div>
 </div>
 </section>
-<section id="summarylinks" class="slide level1">
-<h1>Summary/links</h1>
-<ol type="1">
-<li><a href="https://github.com/ioos/compliance-checker/blob/master/..github/workflows/default-tests.yml">Setup a conda environment for Python testing</a>.</li>
-<li><a href="https://github.com/SciTools/cf-units/tree/main/.github/workflows">Setup a Python/pip environment for test</a>.</li>
-<li><a href="https://github.com/ioos/ioos_code_lab/blob/master/.github/workflows/deploy-docs.yml">Build and publish documentation to gh-pages</a>.</li>
-<li><a href="https://github.com/pyoceans/python-oceans/blob/master/.github/workflows/pip-tests.yml">Build, test, and publish source distribution and binary artifacts to PyPI</a>.</li>
-<li><a href="https://github.com/oceanhackweek/jupyter-image/blob/master/.github/workflows%5D(https://github.com/oceanhackweek/jupyter-image/blob/master/.github/workflows)">Build, test, cache, and publish a docker image</a>.</li>
-<li><a href="https://github.com/marketplace?type=actions">The marketplace</a> for GHA.</li>
-</ol>
+
+<section id="pyscript-to-javascript" class="title-slide slide level1">
+<h1>PyScript to JavaScript</h1>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;body&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;py-script&gt;</span>x = 42<span class="kw">&lt;/py-script&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;button</span> <span class="er">onclick</span><span class="ot">=</span><span class="st">&quot;showX()&quot;</span><span class="kw">&gt;</span>Click Me to Get &#39;x&#39; from Python<span class="kw">&lt;/button&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;script&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">function</span> <span class="fu">showX</span>(){</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>            <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`In Python right now, x = </span><span class="sc">${</span>PyScript<span class="op">.</span><span class="at">globals</span><span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;x&#39;</span>)<span class="sc">}</span><span class="vs">`</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/script&gt;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/body&gt;</span></span></code></pre></div>
 </section>
-<section id="questions" class="slide level1">
+
+<section id="display" class="title-slide slide level1">
+<h1>display</h1>
+<p><img data-src="images/display.png" /></p>
+</section>
+
+<section>
+<section id="what-can-our-community-do-with-this"
+class="title-slide slide level1">
+<h1>What can our community do with this?</h1>
+
+</section>
+<section id="glider-of-the-day" class="slide level2"
+data-background-iframe="htmls/glider.html">
+<h2 data-background-iframe="htmls/glider.html">glider of the day</h2>
+</section>
+<section id="ioos_qc-explorer" class="slide level2"
+data-background-iframe="htmls/ioos_qc_browser.html">
+<h2 data-background-iframe="htmls/ioos_qc_browser.html">ioos_qc
+explorer</h2>
+</section>
+<section id="ioos_qc-csv-uploader" class="slide level2"
+data-background-iframe="htmls/ioos_qc_csv.html">
+<h2 data-background-iframe="htmls/ioos_qc_csv.html">ioos_qc csv
+uploader</h2>
+</section></section>
+<section id="what-if-we-cannot-access-the-web"
+class="title-slide slide level1">
+<h1>What if we cannot access the web?</h1>
+<p><a
+href="https://github.com/ocean-data-qc/ocean-data-qc">https://github.com/ocean-data-qc/ocean-data-qc</a></p>
+</section>
+
+<section id="summary" class="title-slide slide level1">
+<h1>Summary</h1>
+<ul>
+<li class="fragment"><strong>Python in the browser</strong>: Enable
+drop-in content, external file hosting, and application hosting without
+the reliance on server-side configuration (no subscriptions, no remote
+downtime, no data is exchanged)</li>
+<li class="fragment"><strong>Python ecosystem</strong>: Run many popular
+packages of Python and the scientific stack (such as numpy, pandas,
+scikit-learn, and more)</li>
+</ul>
+</section>
+
+<section id="summary-1" class="title-slide slide level1">
+<h1>Summary</h1>
+<ul>
+<li><strong>Python with JavaScript</strong>: Bi-directional
+communication between Python and Javascript objects and namespaces</li>
+</ul>
+<ul>
+<li class="fragment"><strong>Environment management</strong>: Allow
+users to define what packages and files to include for the page code to
+run</li>
+<li class="fragment"><strong>Ship your app zero
+dependencies</strong></li>
+<li class="fragment"><strong>Visual application development</strong>:
+Use readily available curated UI components, such as buttons,
+containers, text boxes, and more</li>
+</ul>
+</section>
+
+<section>
+<section id="questions" class="title-slide slide level1">
 <h1>Questions?</h1>
-<p><img data-src="images/limes.jpg" /></p>
+
 </section>
+<section id="section" class="slide level2"
+data-background-iframe="htmls/mario/play_mario.html">
+<h2 data-background-iframe="htmls/mario/play_mario.html"></h2>
+</section></section>
     </div>
   </div>
 
@@ -443,7 +512,7 @@
 
         // Add the current slide number to the URL hash so that reloading the
         // page/copying the URL will return you to the same slide
-        hash: false,
+        hash: true,
 
         // Start with 1 for the hash rather than 0
         hashOneBasedIndex: false,
