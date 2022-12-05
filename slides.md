@@ -271,7 +271,7 @@ But... Before we dive into that...
 - **Python with JavaScript**: Bi-directional communication between Python and Javascript objects and namespaces
 
 >- **Environment management**: Allow users to define what packages and files to include for the page code to run
->- **Ship your app zero dependencies**
+>- **Ship your app zero dependencies**: Easy upgrades for legacy systems
 >- **Visual application development**: Use readily available curated UI components, such as buttons, containers, text boxes, and more
 
 # Questions?
