@@ -11,10 +11,10 @@ history: true
 
 What are our needs?
 
->- We need at fast serveless solution.
+>- We need a fast serveless solution.
 >- With the basic scientific packages (numpy, scipy, pandas, matplotlib),
 >- and at least some met/ocean specific packages like:
-netCDF4 (**netcdf-c**, **hdf5**), geopandas (**geos**), cartopy (**proj**), cftime (**cyhton extension**), cf_units (**udunits2**), etc.
+netCDF4 (**netcdf-c**, **hdf5**), geopandas (**geos**), cartopy (**proj**), cftime (**cython extension**), cf_units (**udunits2**), etc.
 
 . . . 
 
@@ -79,7 +79,7 @@ Wasm is the closest we ever got to a universal binary.
 - [https://pypyjs.org](https://pypyjs.org)
 - [https://pyodide.org](https://pyodide.org/en/stable/console.html)
 
-## pypjs {data-background-iframe="https://pypyjs.org"}
+## pypyjs {data-background-iframe="https://pypyjs.org"}
 ## Pyodide {data-background-iframe="https://pyodide.org/en/stable/console.html"}
 
 # Why is Pyodide a good option?
