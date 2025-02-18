@@ -11,7 +11,7 @@ history: true
 
 Why another package manager?
 
->- We the system ones: brew, choco, apt, yum, zypper, etc
+>- We have the system ones: brew, choco, apt, yum, zypper, etc
 >- We have language specific ones: pip/uv, cargo, npm, etc
 >- We have some system and language agnostic options: conda, mamba, micromamba, brew (kind of), nix (also kind of), etc
 
