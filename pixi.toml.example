@@ -1,0 +1,23 @@
+[project]
+authors = ["Filipe Fernandes <ocefpaf@gmail.com>"]
+channels = ["conda-forge"]
+description = "DMAC webinar workflow demo"
+name = "Glider of the Day"
+platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
+version = "1.0.0"
+
+[tasks]
+map = "jupyter nbconvert --to notebook --execute gliders_of_the_day.ipynb --output=gliders_of_the_day-output.ipynb"
+email_server = "some email_server"
+send_email = { cmd = "python send_email.py", depends-on = ["email_server"] }
+serve = { cmd = "cd html && python3 -m http.server 8080", depends-on = ["map"] }
+
+[dependencies]
+folium = ">=0.19.4,<0.20"
+erddapy = ">=2.2.3,<3"
+httpx = ">=0.28.1,<0.29"
+pandas = ">=2.2.2,<3"
+nbclassic = ">=1.2.0,<2"
+stamina = ">=24.3.0,<25"
+aiosmtplib = ">=4.0.0,<5"
+aiosmtpd = ">=1.4.6,<2"
