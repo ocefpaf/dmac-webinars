@@ -2,7 +2,7 @@
 author: Filipe Fernandes
 title: pixi workflows
 subtitle: Reproducibility doesn't have to be hard
-date: Mar ??, 2025
+date: Mar 27, 2025
 history: true
 ---
 
