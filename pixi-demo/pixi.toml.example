@@ -8,9 +8,10 @@ version = "1.0.0"
 
 [tasks]
 map = "jupyter nbconvert --to notebook --execute gliders_of_the_day.ipynb --output=gliders_of_the_day-output.ipynb"
+serve = { cmd = "cd html && python3 -m http.server 8080", depends-on = ["map"] }
+
 email_server = "some email_server"
 send_email = { cmd = "python send_email.py", depends-on = ["email_server"] }
-serve = { cmd = "cd html && python3 -m http.server 8080", depends-on = ["map"] }
 
 [dependencies]
 folium = ">=0.19.4,<0.20"
