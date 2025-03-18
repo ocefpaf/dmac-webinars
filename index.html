@@ -113,15 +113,19 @@
 <ul>
 <li class="fragment">We have the system ones: brew, choco, apt, yum,
 zypper, etc</li>
-<li class="fragment">We have language specific ones: pip/uv, cargo, npm,
-etc</li>
+<li class="fragment">We have language specific ones: pip/uv, conan,
+cargo, npm, etc</li>
 <li class="fragment">We have some system and language agnostic options:
-conda, mamba, micromamba, brew (kind of), nix (also kind of), etc</li>
+conda, mamba, micromamba, spack, brew (kind of), nix (also kind of),
+etc</li>
 </ul>
-<div class="fragment">
+</section>
+
+<section id="just-another-toy" class="title-slide slide level1">
+<h1>Just another toy?</h1>
+<p><img data-src="images/another_toy.png" /></p>
 <p>Is pixi just another toy we are playing with for a few days and
 throwing into the basket?</p>
-</div>
 </section>
 
 <section id="what-is-pixi" class="title-slide slide level1">
@@ -150,7 +154,7 @@ and publish them in a webpage. Let’s do that!</p>
 <section id="safe-and-scripted-demonstration"
 class="title-slide slide level1">
 <h1>(safe and scripted) Demonstration</h1>
-<p>What could go wrong?</p>
+<p><a href="pixi-demo/pixi.toml.example">What could go wrong</a> ?</p>
 <!--
 - pixi global install depfinder
 - depfinder gliders_of_the_day.ipynb
@@ -164,8 +168,7 @@ class="title-slide slide level1">
 <h1>Review: pixi global</h1>
 <ul>
 <li class="fragment">Installs packages in a global space</li>
-<li class="fragment">Always available</li>
-<li class="fragment">Good options for CLI tools</li>
+<li class="fragment">Good option for CLI tools</li>
 </ul>
 </section>
 
@@ -188,40 +191,44 @@ class="sourceCode toml"><code class="sourceCode toml"><span id="cb1-1"><a href="
 <section id="review-pixi-add" class="title-slide slide level1">
 <h1>Review: pixi add</h1>
 <ul>
-<li class="fragment">We can add packages to our project</li>
-<li class="fragment">We can add/remove as we go, the env is re-solved
-and the lockfile refreshed.</li>
+<li>We can add/remove as we go, the env is re-solved and the lockfile
+refreshed.</li>
 </ul>
 </section>
 
 <section id="review-pixi-lockfile" class="title-slide slide level1">
 <h1>Review: pixi lockfile</h1>
 <ul>
-<li class="fragment">Ensure the exact same version, same package, is
-used when re-creating the environment.</li>
+<li>Ensure the exact same version, same package, is used when
+re-creating the environment.</li>
 </ul>
 </section>
 
 <section id="review-pixi-as-conda-alternative"
 class="title-slide slide level1">
 <h1>Review: pixi as conda alternative</h1>
-<pre><code>pixi shell</code></pre>
-<p>Will “activate” a conda-like environment.</p>
+<p>Calling “pixi shell” activates a conda-like environment.</p>
 </section>
 
-<section id="what-about-the-tasks-field"
+<section id="review-tasks-field" class="title-slide slide level1">
+<h1>Review: [tasks] field</h1>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">map</span> <span class="op">=</span> <span class="st">&quot;jupyter nbconvert --to notebook --execute in.ipynb --output=out.ipynb&quot;</span></span></code></pre></div>
+</section>
+
+<section id="review-tasks-as-a-makefile"
 class="title-slide slide level1">
-<h1>What about the [tasks] field?</h1>
-<p>Let’s add a task that will run that notebook for us:</p>
+<h1>Review: tasks as a makefile</h1>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode toml"><code class="sourceCode toml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">map</span> <span class="op">=</span> <span class="st">&quot;jupyter nbconvert --to notebook --execute gliders_of_the_day.ipynb --output=gliders_of_the_day-output.ipynb&quot;</span></span></code></pre></div>
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">serve</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">cmd</span><span class="op"> =</span> <span class="st">&quot;cd html &amp;&amp; python3 -m http.server 8080&quot;</span><span class="op">, </span><span class="dt">depends-on</span><span class="op"> =</span> <span class="op">[</span><span class="st">&quot;map&quot;</span><span class="op">] }</span></span></code></pre></div>
 </section>
 
-<section id="using-pixi-run-as-a-makefile"
+<section id="using-pixi-for-python-packages-cis-and-gha"
 class="title-slide slide level1">
-<h1>Using pixi run as a makefile</h1>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode toml"><code class="sourceCode toml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">serve</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">cmd</span><span class="op"> =</span> <span class="st">&quot;cd html &amp;&amp; python3 -m http.server 8080&quot;</span><span class="op">, </span><span class="dt">depends-on</span><span class="op"> =</span> <span class="op">[</span><span class="st">&quot;map&quot;</span><span class="op">] }</span></span></code></pre></div>
+<h1>Using pixi for Python packages, CIs, and GHA</h1>
+<p><img data-src="images/mp-different.gif" /></p>
+<p><a
+href="https://github.com/ocefpaf/glideroftheday/blob/main/.github/workflows/publish_map.yaml">https://github.com/ocefpaf/glideroftheday</a></p>
 </section>
 
 <section id="some-extra-commands-that-we-should-know"
@@ -236,6 +243,7 @@ class="title-slide slide level1">
 
 <section id="please-check-the-docs" class="title-slide slide level1">
 <h1>Please check the Docs</h1>
+<p>If you want to become a pixi guru, please read the docs!</p>
 <p><a href="https://pixi.sh/latest/">https://pixi.sh/latest/</a></p>
 </section>
 

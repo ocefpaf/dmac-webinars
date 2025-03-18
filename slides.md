@@ -99,6 +99,8 @@ serve = { cmd = "cd html && python3 -m http.server 8080", depends-on = ["map"] }
 
 ![](images/mp-different.gif)
 
+[https://github.com/ocefpaf/glideroftheday](https://github.com/ocefpaf/glideroftheday/blob/main/.github/workflows/publish_map.yaml)
+
 
 # Some extra commands that we should know
 
