@@ -95,12 +95,12 @@ map = "jupyter nbconvert --to notebook --execute in.ipynb --output=out.ipynb"
 serve = { cmd = "cd html && python3 -m http.server 8080", depends-on = ["map"] }
 ```
 
-# Using pixi for Python packages, CIs, and GHA
+# Using pixi for CI, Python packages and GHA
 
 ![](images/mp-different.gif)
 
-[https://github.com/ocefpaf/glideroftheday](https://github.com/ocefpaf/glideroftheday/blob/main/.github/workflows/publish_map.yaml)
-
+[CI-packages](https://github.com/ioos/ciso/blob/main/.github/workflows/tests.yml)
+[CI-GHA](https://github.com/ocefpaf/glideroftheday/blob/main/.github/workflows/publish_map.yaml)
 
 # Some extra commands that we should know
 
