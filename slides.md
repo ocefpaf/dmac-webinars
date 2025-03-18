@@ -12,10 +12,12 @@ history: true
 Why another package manager?
 
 >- We have the system ones: brew, choco, apt, yum, zypper, etc
->- We have language specific ones: pip/uv, cargo, npm, etc
->- We have some system and language agnostic options: conda, mamba, micromamba, brew (kind of), nix (also kind of), etc
+>- We have language specific ones: pip/uv, conan, cargo, npm, etc
+>- We have some system and language agnostic options: conda, mamba, micromamba, spack, brew (kind of), nix (also kind of), etc
 
-. . . 
+# Just another toy?
+
+![](images/another_toy.png)
 
 Is pixi just another toy we are playing with for a few days and throwing into the basket?
 
@@ -36,7 +38,7 @@ Say, you need to download data from a server, create some metrics, and publish t
 
 # (safe and scripted) Demonstration
 
-What could go wrong?
+[What could go wrong](pixi-demo/pixi.toml.example) ?
 
 
 <!--
@@ -50,8 +52,7 @@ What could go wrong?
 # Review: pixi global
 
 >- Installs packages in a global space
->- Always available
->- Good options for CLI tools
+>- Good option for CLI tools
 
 # Review: pixi toml config
 ```toml
@@ -70,35 +71,34 @@ version = "0.1.0"
 
 # Review: pixi add
 
->- We can add packages to our project
->- We can add/remove as we go, the env is re-solved and the lockfile refreshed.
+- We can add/remove as we go, the env is re-solved and the lockfile refreshed.
 
 # Review: pixi lockfile
 
->- Ensure the exact same version, same package, is used when re-creating the environment.
+- Ensure the exact same version, same package, is used when re-creating the environment.
 
 
 # Review: pixi as conda alternative
 
-```
-pixi shell
-```
+Calling "pixi shell" activates a conda-like environment.
 
-Will "activate" a conda-like environment.
+# Review: [tasks] field
 
-# What about the [tasks] field?
-
-Let's add a task that will run that notebook for us:
 
 ```toml
-map = "jupyter nbconvert --to notebook --execute gliders_of_the_day.ipynb --output=gliders_of_the_day-output.ipynb"
+map = "jupyter nbconvert --to notebook --execute in.ipynb --output=out.ipynb"
 ```
 
-# Using pixi run as a makefile
+# Review: tasks as a makefile
 
 ```toml
 serve = { cmd = "cd html && python3 -m http.server 8080", depends-on = ["map"] }
 ```
+
+# Using pixi for Python packages, CIs, and GHA
+
+![](images/mp-different.gif)
+
 
 # Some extra commands that we should know
 
@@ -107,6 +107,8 @@ serve = { cmd = "cd html && python3 -m http.server 8080", depends-on = ["map"] }
 >- `pixi update`
 
 # Please check the Docs
+
+If you want to become a pixi guru, please read the docs!
 
 [https://pixi.sh/latest/](https://pixi.sh/latest/)
 
