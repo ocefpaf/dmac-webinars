@@ -6,6 +6,9 @@ date: Mar 27, 2025
 history: true
 ---
 
+# pixi workflows
+
+![](images/zelda_meme.jpg)
 
 # Before we start
 
@@ -40,6 +43,7 @@ Say, you need to download data from a server, create some metrics, and publish t
 
 [What could go wrong](pixi-demo/pixi.toml.example) ?
 
+PS: One can import conda environments with `pixi init --import ./environment.yml`
 
 <!--
 - pixi global install depfinder
